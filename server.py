@@ -57,17 +57,18 @@ def handle_client(conn, addr):
                     print("[!] Usage: get <remote_path> <local_path>")
                     continue
                 remote_path, local_path = parts[1], parts[2]
-                conn.sendall(f"send {remote_path}\n".encode())
+                conn.sendall(f"get {remote_path}\n".encode())
 
-                with open(local_path, "wb") as f:
-                    while True:
-                        chunk = conn.recv(4096)
-                        if not chunk or b"<<EOF>>" in chunk:
-                            chunk = chunk.replace(b"<<EOF>>", b"")
+                try:
+                    with open(local_path, "wb") as f:
+                        while True:
+                            chunk = conn.recv(4096)
+                            if not chunk:
+                                break
                             f.write(chunk)
-                            break
-                        f.write(chunk)
-                print(f"[+] File {remote_path} received as {local_path}")
+                    print(f"[+] File {remote_path} received as {local_path}")
+                except Exception as e:
+                    print(f"[!] Error writing file: {e}")
                 continue
 
             conn.sendall(cmd.encode() + b"\n")
